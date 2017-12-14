@@ -23,6 +23,7 @@ class MyMplCanvas(FigureCanvas):
     """这是一个窗口部件，即QWidget（当然也是FigureCanvasAgg）"""
     def __init__(self, parent=None, width=5, height=4, dpi=100):
         fig = Figure(figsize=(width, height), dpi=dpi)
+
         self.axes = fig.add_subplot(111)
         # 每次plot()调用的时候，我们希望原来的坐标轴被清除(所以False)
         self.axes.hold(False)
@@ -70,6 +71,8 @@ class MyDynamicMplCanvas(MyMplCanvas):
 class ApplicationWindow(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
+        self.currentPath = sys.path[0]#程序运行的路径
+        self.readConfig()#读取配置文件
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.setWindowTitle("程序主窗口")
 
@@ -113,6 +116,38 @@ class ApplicationWindow(QMainWindow):
 Copyright 2017 
         """
         )
+
+    def readConfig(self):
+        configFileName = self.currentPath+'/config.txt'
+        colony = []
+        machineInColony = {}
+        lines = open(configFileName).readlines()
+        self.IPMap = {}  # {ii: self.sampleList[ii] for ii in range(30)}
+        self.IPMapInv = {}  # {self.sampleList[ii]:ii for ii in range(30)}
+        ii = 0
+        while (ii < len(lines)):
+            if(lines[ii].strip()=='-dataDir'):
+                self.dataPath = lines[ii+1].strip()
+                ii+=2
+            else:
+                self.dataPath = self.currentPath+'/Data'
+            if (lines[ii].strip() == '-colony'):
+                colonyTemp = lines[ii + 1].strip()
+                colony.append(lines[ii + 1].strip())
+                machineInColony[lines[ii + 1].strip()] = []
+                ii += 3
+            while (ii < len(lines) and lines[ii].strip() != '-colony'):
+                machineInColony[colonyTemp].append(lines[ii].strip())
+                mapLen = len(self.IPMap)
+                self.IPMap[mapLen] = lines[ii].strip()
+                self.IPMapInv[lines[ii].strip()] = mapLen
+                ii += 1
+        self.colony = colony
+        self.machineInColony = machineInColony
+
+    def readData(self):
+        dataPath = self.currentPath + '/Data'
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
