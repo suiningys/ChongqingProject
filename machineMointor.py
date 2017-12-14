@@ -73,6 +73,7 @@ class ApplicationWindow(QMainWindow):
         QMainWindow.__init__(self)
         self.currentPath = sys.path[0]#程序运行的路径
         self.readConfig()#读取配置文件
+        self.readData()#读取数据
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.setWindowTitle("程序主窗口")
 
@@ -124,13 +125,12 @@ Copyright 2017
         lines = open(configFileName).readlines()
         self.IPMap = {}  # {ii: self.sampleList[ii] for ii in range(30)}
         self.IPMapInv = {}  # {self.sampleList[ii]:ii for ii in range(30)}
+        self.dataPath = self.currentPath + '/Data'#数据默认地址
         ii = 0
         while (ii < len(lines)):
-            if(lines[ii].strip()=='-dataDir'):
+            if(lines[ii].strip()=='-dataDir'):#如果用户指定数据存放地址
                 self.dataPath = lines[ii+1].strip()
                 ii+=2
-            else:
-                self.dataPath = self.currentPath+'/Data'
             if (lines[ii].strip() == '-colony'):
                 colonyTemp = lines[ii + 1].strip()
                 colony.append(lines[ii + 1].strip())
@@ -146,7 +146,43 @@ Copyright 2017
         self.machineInColony = machineInColony
 
     def readData(self):
-        dataPath = self.currentPath + '/Data'
+        dataPath = self.dataPath
+        ipsData = {}
+        for colonyTemp in self.colony:
+            for ips in self.machineInColony[colonyTemp]:
+                dataAllTemp = []
+                dataLabels = []
+                timeLabels = {}
+                devsMap = {}
+                try:
+                    filePath = dataPath + '/' + ips + '-ram.txt'
+                    dataRamTemp = open(dataPath + '/' + ips + '-ram.txt')
+                    tableRamTemp = dataRamTemp.readlines()
+                    tableRamTemp.pop(0)
+                    dataLabels.append('ram')
+                    devsMap['ram'] = len(devsMap)
+                    dataRamTemp.close()
+                except:
+                    tableRamTemp = []
+                try:
+                    filePath = dataPath + '/' + ips + '-disk.txt'
+                    dataDiskTemp = open(dataPath + '/' + ips + '-disk.txt')
+                    tableDiskTemp = dataDiskTemp.readlines()
+                    tableDiskTemp.pop(0)
+                    dataDiskTemp.close()
+                    stat = 0
+                    for line in tableDiskTemp:
+                        if (stat > 1000):
+                            break
+                        labelTemp = line.strip().split(',')[2]
+                        if (not labelTemp in dataLabels):
+                            dataLabels.append(labelTemp)
+                            devsMap[labelTemp] = len(devsMap)
+                except:
+                    tableDiskTemp = []
+                ipsInfo = [tableRamTemp, tableDiskTemp, dataLabels, devsMap]
+                ipsData[ips] = ipsInfo
+        self.ipsData = ipsData
 
 
 if __name__ == '__main__':
