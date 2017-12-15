@@ -54,9 +54,9 @@ class MyDynamicMplCanvas(MyMplCanvas):
     """动态画布：每秒自动更新，更换一条折线。"""
     def __init__(self, *args, **kwargs):
         MyMplCanvas.__init__(self, *args, **kwargs)
-        timer = QtCore.QTimer(self)
-        timer.timeout.connect(self.update_figure)
-        timer.start(1000)
+        # timer = QtCore.QTimer(self)
+        # timer.timeout.connect(self.update_figure)
+        # timer.start(1000)
 
     def compute_initial_figure(self):
         self.axes.plot([0, 1, 2, 3], [1, 2, 0, 4], 'r')
@@ -74,6 +74,7 @@ class ApplicationWindow(QMainWindow):
         self.currentPath = sys.path[0]#程序运行的路径
         self.readConfig()#读取配置文件
         self.readData()#读取数据
+
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.setWindowTitle("程序主窗口")
 
@@ -91,15 +92,19 @@ class ApplicationWindow(QMainWindow):
         self.main_widget = QWidget(self)
 
         l = QVBoxLayout(self.main_widget)
-        sc = MyStaticMplCanvas(self.main_widget, width=5, height=4, dpi=100)
-        dc = MyDynamicMplCanvas(self.main_widget, width=5, height=4, dpi=100)
-        l.addWidget(sc)
-        l.addWidget(dc)
+        #sc = MyStaticMplCanvas(self.main_widget, width=5, height=4, dpi=100)
+        self.dc = MyDynamicMplCanvas(self.main_widget, width=5, height=4, dpi=100)
+        #l.addWidget(sc)
+        l.addWidget(self.dc)
 
         self.main_widget.setFocus()
         self.setCentralWidget(self.main_widget)
         # 状态条显示2秒
         self.statusBar().showMessage("Supported by Xi'an Jiaotong Univesity", 2000)
+        #设置定时器信号
+        timer = QtCore.QTimer(self)
+        timer.timeout.connect(self.timerEvent)
+        timer.start(1000)
 
     def fileQuit(self):
         self.close()
@@ -184,6 +189,9 @@ Copyright 2017
                 ipsData[ips] = ipsInfo
         self.ipsData = ipsData
 
+    #timer fuction
+    def timerEvent(self):
+        self.dc.update_figure()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
