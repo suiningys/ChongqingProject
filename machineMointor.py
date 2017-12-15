@@ -12,7 +12,7 @@ import matplotlib
 matplotlib.use("Qt5Agg")
 
 from PyQt5 import QtCore
-from PyQt5.QtWidgets import QApplication, QMainWindow, QMenu, QVBoxLayout, QSizePolicy, QMessageBox, QWidget
+from PyQt5.QtWidgets import * #QApplication, QMainWindow, QMenu, QVBoxLayout, QSizePolicy, QMessageBox, QWidget
 
 from numpy import arange, sin, pi
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -123,8 +123,16 @@ class ApplicationWindow(QMainWindow):
         #l.addWidget(sc)
         l.addWidget(self.ddm)
 
+
+
+        #插入选择框
+        self.chooseColony = QComboBox()
+        self.chooseColony.insertItems(1,self.colony)
+        l.addWidget(self.chooseColony)
+
         self.main_widget.setFocus()
         self.setCentralWidget(self.main_widget)
+
         # 状态条显示2秒
         self.statusBar().showMessage("Supported by Xi'an Jiaotong Univesity", 2000)
 
@@ -222,6 +230,9 @@ Copyright 2017
                 ipsInfo = [tableRamTemp, tableDiskTemp, dataLabels, devsMap]
                 ipsData[ips] = ipsInfo
         self.ipsData = ipsData
+
+    def changeColony(self):
+        pass
 
     #timer fuction
     def timerEvent(self):
