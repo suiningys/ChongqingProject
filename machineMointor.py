@@ -68,6 +68,31 @@ class MyDynamicMplCanvas(MyMplCanvas):
         self.axes.plot([0, 1, 2, 3], l, 'r')
         self.draw()
 
+class DynamicDrawMachines(MyMplCanvas):
+    def __init__(self, *args, **kwargs):
+        self.points = 100
+        MyMplCanvas.__init__(self, *args, **kwargs)
+
+
+    def compute_initial_figure(self):
+        self.xData = list(range(self.points ))
+        self.yData = [0]*self.points
+        self.axes.plot(self.xData,self.yData,'b')
+        self.axes.set_ylim([0,100])
+        self.axes.set_xlim([0, self.points])
+        self.axes.set_yticks(range(0,101,10))
+        self.axes.grid(True)
+
+
+    def update_figure(self):
+        self.yData = self.yData[1:]+[random.randint(20, 80)]
+        self.axes.plot(self.xData,self.yData,'b')
+        self.axes.set_ylim([0, 100])
+        self.axes.set_xlim([0, self.points])
+        self.axes.set_yticks(range(0, 101, 10))
+        self.axes.grid(True)
+        self.draw()
+
 class ApplicationWindow(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
@@ -93,9 +118,10 @@ class ApplicationWindow(QMainWindow):
 
         l = QVBoxLayout(self.main_widget)
         #sc = MyStaticMplCanvas(self.main_widget, width=5, height=4, dpi=100)
-        self.dc = MyDynamicMplCanvas(self.main_widget, width=5, height=4, dpi=100)
+        #self.dc = MyDynamicMplCanvas(self.main_widget, width=5, height=4, dpi=100)
+        self.ddm = DynamicDrawMachines(self.main_widget,width=5, height=4, dpi=100)
         #l.addWidget(sc)
-        l.addWidget(self.dc)
+        l.addWidget(self.ddm)
 
         self.main_widget.setFocus()
         self.setCentralWidget(self.main_widget)
@@ -157,7 +183,7 @@ Copyright 2017
         f = open(fileName)
         machineMap = json.load(f,encoding='utf-8')
         return  machineMap
-    
+
     def readData(self):
         dataPath = self.dataPath
         ipsData = {}
@@ -199,7 +225,7 @@ Copyright 2017
 
     #timer fuction
     def timerEvent(self):
-        self.dc.update_figure()
+        self.ddm.update_figure()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
