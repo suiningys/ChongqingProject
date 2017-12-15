@@ -116,26 +116,44 @@ class ApplicationWindow(QMainWindow):
 
         self.main_widget = QWidget(self)
 
-        l = QVBoxLayout(self.main_widget)
+        H1 = QHBoxLayout(self.main_widget)
         #sc = MyStaticMplCanvas(self.main_widget, width=5, height=4, dpi=100)
         #self.dc = MyDynamicMplCanvas(self.main_widget, width=5, height=4, dpi=100)
         self.ddm = DynamicDrawMachines(self.main_widget,width=5, height=4, dpi=100)
         #l.addWidget(sc)
-        l.addWidget(self.ddm)
+        H1.addWidget(self.ddm)
 
 
 
         #插入选择框
+        V1 = QVBoxLayout(self.main_widget)
+        self.chooseColonyLable = QLabel(u'集群')
         self.chooseColony = QComboBox()
         self.chooseColony.insertItems(1,self.colony)
-        l.addWidget(self.chooseColony)
+        self.chooseColony.currentIndexChanged.connect(self.changeColony)
+        self.chooseMachineLable = QLabel(u'机器IP')
+        self.chooseMachine = QComboBox()
+        #self.chooseMachine.insertItems(1,[])
+        self.chooseMachine.currentIndexChanged.connect(self.changeMachine)
+        self.chooseDeviceLable = QLabel(u'机器设备')
+        self.chooseDevice = QComboBox()
+        #self.chooseDevice = QBox
+        V1.addWidget(self.chooseColonyLable)
+        V1.addWidget(self.chooseColony)
+        V1.addWidget(self.chooseMachineLable)
+        V1.addWidget(self.chooseMachine)
+        V1.addWidget(self.chooseDeviceLable)
+        V1.addWidget(self.chooseDevice)
 
+        H1.addLayout(V1)
+        self.setLayout(H1)
         self.main_widget.setFocus()
         self.setCentralWidget(self.main_widget)
 
         # 状态条显示2秒
         self.statusBar().showMessage("Supported by Xi'an Jiaotong Univesity", 2000)
-
+        #设置分辨率
+        #self.setGeometry(300,300,600,600)
         #设置定时器
         timer = QtCore.QTimer(self)
         timer.timeout.connect(self.timerEvent)
@@ -168,19 +186,19 @@ Copyright 2017
         self.dataPath = self.currentPath + '/Data'#数据默认地址
         ii = 0
         while (ii < len(lines)):
-            if(lines[ii].strip()=='-dataDir'):#如果用户指定数据存放地址
-                self.dataPath = lines[ii+1].strip()
+            if(lines[ii].strip().decode('utf-8')=='-dataDir'):#如果用户指定数据存放地址
+                self.dataPath = lines[ii+1].strip().decode('utf-8')
                 ii+=2
             if (lines[ii].strip() == '-colony'):
-                colonyTemp = lines[ii + 1].strip()
-                colony.append(lines[ii + 1].strip())
-                machineInColony[lines[ii + 1].strip()] = []
+                colonyTemp = lines[ii + 1].strip().decode('utf-8')
+                colony.append(lines[ii + 1].strip().decode('utf-8'))
+                machineInColony[lines[ii + 1].strip().decode('utf-8')] = []
                 ii += 3
-            while (ii < len(lines) and lines[ii].strip() != '-colony'):
-                machineInColony[colonyTemp].append(lines[ii].strip())
+            while (ii < len(lines) and lines[ii].strip().decode('utf-8') != '-colony'):
+                machineInColony[colonyTemp].append(lines[ii].strip().decode('utf-8'))
                 mapLen = len(self.IPMap)
-                self.IPMap[mapLen] = lines[ii].strip()
-                self.IPMapInv[lines[ii].strip()] = mapLen
+                self.IPMap[mapLen] = lines[ii].strip().decode('utf-8')
+                self.IPMapInv[lines[ii].strip().decode('utf-8')] = mapLen
                 ii += 1
         self.colony = colony
         self.machineInColony = machineInColony
@@ -232,7 +250,21 @@ Copyright 2017
         self.ipsData = ipsData
 
     def changeColony(self):
-        pass
+        self.selectedColony = self.chooseColony.currentText()
+        self.chooseDevice.clear()
+        self.chooseMachine.clear()
+        ipList = self.machineInColony[self.selectedColony]
+        self.chooseMachine.insertItems(1,ipList)
+
+    def changeMachine(self):
+        self.selectedMachine = self.chooseMachine.currentText()
+        self.chooseDevice.clear()
+        if(len(self.chooseMachine)==0):
+            return
+        devList = self.ipsData[self.selectedMachine][2]
+        self.chooseDevice.insertItems(1,devList)
+
+
 
     #timer fuction
     def timerEvent(self):
