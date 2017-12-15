@@ -117,13 +117,8 @@ class ApplicationWindow(QMainWindow):
         self.main_widget = QWidget(self)
 
         H1 = QHBoxLayout(self.main_widget)
-        #sc = MyStaticMplCanvas(self.main_widget, width=5, height=4, dpi=100)
-        #self.dc = MyDynamicMplCanvas(self.main_widget, width=5, height=4, dpi=100)
         self.ddm = DynamicDrawMachines(self.main_widget,width=5, height=4, dpi=100)
-        #l.addWidget(sc)
         H1.addWidget(self.ddm)
-
-
 
         #插入选择框
         V1 = QVBoxLayout(self.main_widget)
@@ -133,20 +128,25 @@ class ApplicationWindow(QMainWindow):
         self.chooseColony.currentIndexChanged.connect(self.changeColony)
         self.chooseMachineLable = QLabel(u'机器IP')
         self.chooseMachine = QComboBox()
-        #self.chooseMachine.insertItems(1,[])
         self.chooseMachine.currentIndexChanged.connect(self.changeMachine)
         self.chooseDeviceLable = QLabel(u'机器设备')
         self.chooseDevice = QComboBox()
-        #self.chooseDevice = QBox
         V1.addWidget(self.chooseColonyLable)
         V1.addWidget(self.chooseColony)
         V1.addWidget(self.chooseMachineLable)
         V1.addWidget(self.chooseMachine)
         V1.addWidget(self.chooseDeviceLable)
         V1.addWidget(self.chooseDevice)
-
+        self.outputsLable = QLabel(u'系统状况')
+        self.outputsSysCon = QTextEdit()
+        V1.addWidget(self.outputsLable)
+        V1.addWidget(self.outputsSysCon)
         H1.addLayout(V1)
-        self.setLayout(H1)
+
+
+
+
+        #self.setLayout(V2)
         self.main_widget.setFocus()
         self.setCentralWidget(self.main_widget)
 
@@ -269,6 +269,7 @@ Copyright 2017
     #timer fuction
     def timerEvent(self):
         self.ddm.update_figure()
+        self.outputsSysCon.append(u"系统正常，哈哈哈哈哈哈")
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
