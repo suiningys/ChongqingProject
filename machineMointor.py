@@ -101,10 +101,11 @@ class ApplicationWindow(QMainWindow):
         self.setCentralWidget(self.main_widget)
         # 状态条显示2秒
         self.statusBar().showMessage("Supported by Xi'an Jiaotong Univesity", 2000)
-        #设置定时器信号
+
+        #设置定时器
         timer = QtCore.QTimer(self)
         timer.timeout.connect(self.timerEvent)
-        timer.start(1000)
+        timer.start(1000)# +1s
 
     def fileQuit(self):
         self.close()
@@ -150,6 +151,13 @@ Copyright 2017
         self.colony = colony
         self.machineInColony = machineInColony
 
+    def readJson(self):
+        import json
+        fileName = ''
+        f = open(fileName)
+        machineMap = json.load(f,encoding='utf-8')
+        return  machineMap
+    
     def readData(self):
         dataPath = self.dataPath
         ipsData = {}
