@@ -131,12 +131,16 @@ class ApplicationWindow(QMainWindow):
         self.chooseMachine.currentIndexChanged.connect(self.changeMachine)
         self.chooseDeviceLable = QLabel(u'机器设备')
         self.chooseDevice = QComboBox()
+        self.useLocalData = QCheckBox('使用本地数据',self)
+        self.useLocalData.toggle()
+        self.useLocalData.stateChanged.connect(self.useLocalDataChange)
         V1.addWidget(self.chooseColonyLable)
         V1.addWidget(self.chooseColony)
         V1.addWidget(self.chooseMachineLable)
         V1.addWidget(self.chooseMachine)
         V1.addWidget(self.chooseDeviceLable)
         V1.addWidget(self.chooseDevice)
+        V1.addWidget(self.useLocalData)
         self.outputsLable = QLabel(u'系统状况')
         self.outputsSysCon = QTextEdit()
         V1.addWidget(self.outputsLable)
@@ -183,11 +187,13 @@ Copyright 2017
         lines = open(configFileName).readlines()
         self.IPMap = {}  # {ii: self.sampleList[ii] for ii in range(30)}
         self.IPMapInv = {}  # {self.sampleList[ii]:ii for ii in range(30)}
-        self.dataPath = self.currentPath + '/Data'#数据默认地址
+        self.localDataPath = self.currentPath + '/Data'#数据默认地址
+        self.configDataPath = self.localDataPath
+        self.readDataPath = self.localDataPath
         ii = 0
         while (ii < len(lines)):
             if(lines[ii].strip().decode('utf-8')=='-dataDir'):#如果用户指定数据存放地址
-                self.dataPath = lines[ii+1].strip().decode('utf-8')
+                self.configDataPath = lines[ii+1].strip().decode('utf-8')
                 ii+=2
             if (lines[ii].strip() == '-colony'):
                 colonyTemp = lines[ii + 1].strip().decode('utf-8')
@@ -211,7 +217,7 @@ Copyright 2017
         return  machineMap
 
     def readData(self):
-        dataPath = self.dataPath
+        dataPath = self.readDataPath
         ipsData = {}
         for colonyTemp in self.colony:
             for ips in self.machineInColony[colonyTemp]:
@@ -263,6 +269,13 @@ Copyright 2017
             return
         devList = self.ipsData[self.selectedMachine][2]
         self.chooseDevice.insertItems(1,devList)
+
+    def useLocalDataChange(self,state):
+        checkState = state
+        if state == 2:
+            self.readDataPath  = self.localDataPath
+        else:
+            self.readDataPath = self.configDataPath
 
 
 
