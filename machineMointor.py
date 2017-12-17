@@ -128,8 +128,8 @@ class DynamicDrawMachines(MyMplCanvas):
     def ylabel(self,Ylabel = 'X'):
         self.axes.set_ylabel(Ylabel)
 
-    def bar(self, *args, **kwargs):
-        pass
+    # def bar(self, *args, **kwargs):
+    #     self.axes.bar(*args, **kwargs)
 class ApplicationWindow(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
@@ -430,6 +430,7 @@ Copyright 2017
             lines[-1] = lineTempIndex
         else:
             lines.append(lineTempIndex)
+
         statFile.writelines(lines)
         logFile.close()
 
@@ -475,7 +476,29 @@ Copyright 2017
             self.drawPic.ylabel('Disk')
             # self.drawPic.draw()
         else:
-            pass
+            self.drawPic.cla()
+            xdata = arange(5) + 1
+            warningData = []
+            errorData = []
+            statFile = open('Statistic.txt','r')
+            lines = statFile.readlines()
+            for ii in range(5):
+                index = -1-ii
+                try:
+                    lineTemp =[int(ii) for ii in lines[index].strip().split(' ')]
+                    warningData.append(lineTemp[2])
+                    errorData.append(lineTemp[3])
+                except:
+                    warningData = 0
+                    errorData = 0
+            statFile.close()
+            self.drawPic.axes.bar(xdata, warningData, width=0.35, facecolor = 'yellowgreen',edgecolor = 'white')
+            self.drawPic.axes.bar(xdata+0.35, errorData, width=0.35, facecolor='red', edgecolor='white')
+            for x,y in zip(xdata,warningData):
+                self.drawPic.axes.text(x+0.3,y+0.05,y,ha='center',va='bottom')
+            for x, y in zip(xdata, warningData):
+                self.drawPic.axes.text(x + 0.6, y + 0.05, y, ha='center', va='bottom')
+            self.drawPic.draw()
 
     #timer fuction
     def timerEvent(self):
