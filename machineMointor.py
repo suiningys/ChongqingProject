@@ -214,7 +214,7 @@ Copyright 2017
 
     def readJson(self):
         import json
-        fileName = ''
+        fileName = self.currentPath+'/a.json'
         f = open(fileName)
         machineMap = json.load(f,encoding='utf-8')
         f.close()
@@ -310,6 +310,7 @@ Copyright 2017
 
     #timer fuction
     def timerEvent(self):
+        self.readJson()
         self.ddm.update_figure()
         self.printSysCond()
         self.timeCount = self.timeCount + 1
