@@ -495,9 +495,9 @@ Copyright 2017
             self.drawPic.axes.bar(xdata, warningData, width=0.35, facecolor = 'yellowgreen',edgecolor = 'white')
             self.drawPic.axes.bar(xdata+0.35, errorData, width=0.35, facecolor='red', edgecolor='white')
             for x,y in zip(xdata,warningData):
-                self.drawPic.axes.text(x+0.3,y+0.05,y,ha='center',va='bottom')
-            for x, y in zip(xdata, warningData):
-                self.drawPic.axes.text(x + 0.6, y + 0.05, y, ha='center', va='bottom')
+                self.drawPic.axes.text(x,y+0.05,y,ha='center',va='bottom')
+            for x, y in zip(xdata, errorData):
+                self.drawPic.axes.text(x + 0.3, y + 0.05, y, ha='center', va='bottom')
             maxNum = max([max(warningData),max(errorData)])+2
             self.drawPic.axes.set_ylim([0, maxNum])
             self.drawPic.draw()
