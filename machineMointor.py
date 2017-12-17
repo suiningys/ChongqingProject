@@ -29,7 +29,7 @@ class MyMplCanvas(FigureCanvas):
 
         self.axes = fig.add_subplot(111)
         # 每次plot()调用的时候，我们希望原来的坐标轴被清除(所以False)
-        self.axes.hold(False)
+        self.axes.hold(True)
 
         self.compute_initial_figure()
 
@@ -483,7 +483,7 @@ Copyright 2017
             statFile = open('Statistic.txt','r')
             lines = statFile.readlines()
             for ii in range(5):
-                index = -1-ii
+                index = -5+ii
                 try:
                     lineTemp =[int(ii) for ii in lines[index].strip().split(' ')]
                     warningData.append(lineTemp[2])
@@ -498,6 +498,8 @@ Copyright 2017
                 self.drawPic.axes.text(x+0.3,y+0.05,y,ha='center',va='bottom')
             for x, y in zip(xdata, warningData):
                 self.drawPic.axes.text(x + 0.6, y + 0.05, y, ha='center', va='bottom')
+            maxNum = max([max(warningData),max(errorData)])+2
+            self.drawPic.axes.set_ylim([0, maxNum])
             self.drawPic.draw()
 
     #timer fuction
