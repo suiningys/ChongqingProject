@@ -18,7 +18,8 @@ from PyQt5.QtGui import QColor
 from numpy import arange, sin, pi
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-
+from matplotlib.font_manager import FontProperties
+import datetime
 
 class MyMplCanvas(FigureCanvas):
     """这是一个窗口部件，即QWidget（当然也是FigureCanvasAgg）"""
@@ -120,6 +121,14 @@ class DynamicDrawMachines(MyMplCanvas):
         self.axes.grid(True)
         self.draw()
 
+    def xlabel(self,Xlabel = 'X'):
+        self.axes.set_xlabel(Xlabel)
+
+    def ylabel(self,Ylabel = 'X'):
+        self.axes.set_ylabel(Ylabel)
+
+    def bar(self, *args, **kwargs):
+        pass
 class ApplicationWindow(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
@@ -130,11 +139,13 @@ class ApplicationWindow(QMainWindow):
         self.createColorMap()#创建默认颜色
         self.createWarningMap()
 
+        #默认选择的集群等为空
         self.selectedColony = ''
         self.selectedMachine = ''
         self.selectedDevice = ''
-        self.plotPoints = 100
+        self.plotPoints = 100#屏幕上画100个点
         self.plotData = [None]*self.plotPoints
+
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.setWindowTitle("程序主窗口")
 
@@ -290,6 +301,7 @@ Copyright 2017
                     dataRamTemp.close()
                 except:
                     tableRamTemp = []
+
                 try:
                     filePath = dataPath + '/' + ips + '-disk.txt'
                     dataDiskTemp = open(dataPath + '/' + ips + '-disk.txt')
@@ -306,6 +318,7 @@ Copyright 2017
                             devsMap[labelTemp] = len(devsMap)
                 except:
                     tableDiskTemp = []
+
                 ipsInfo = [tableRamTemp, tableDiskTemp, dataLabels, devsMap]
                 ipsData[ips] = ipsInfo
         self.ipsData = ipsData
@@ -360,6 +373,9 @@ Copyright 2017
 
     def printSysCond(self):
         allRightFlag = 1
+        logFile = open(self.currentPath+'/outputlog.log','a')
+        now = datetime.datetime.now()
+        nowStr = now.strftime('%Y-%m-%d %H:%M:%S')
         for ip in self.machineCondNow.keys():
             dangerPro = self.machineCondNow[ip]['p']
             if (dangerPro>=0.9):
@@ -378,12 +394,15 @@ Copyright 2017
                 color = QColor(self.colorMap['green'])
                 continue
             self.outputsSysCon.setTextColor(color)
-            self.outputsSysCon.append(ip + ' ' + text)
+            outMassage = nowStr+' '+ ip + ' ' + text+'\n'
+            self.outputsSysCon.append(outMassage)
+            logFile.write(outMassage.encode('utf-8'))
         if(allRightFlag==1):
             text = self.warningMap['info']
             color = QColor(self.colorMap['green'])
             self.outputsSysCon.setTextColor(color)
             self.outputsSysCon.append(text)
+        logFile.close()
 
     def updateFigure(self):
         #self.drawPic.axes.clear()
@@ -393,6 +412,7 @@ Copyright 2017
                 self.drawPic.cla()
                 self.plotData = self.plotData[1:] + [dataTemp]
                 self.drawPic.plot(list(range(self.plotPoints)),self.plotData)
+                self.drawPic.ylabel('Usage')
         elif(self.drawWay==2):
             self.drawPic.cla()
             pointX = []
@@ -421,6 +441,8 @@ Copyright 2017
                 else:
                     cValue.append('g')
             self.drawPic.scatter(pointX,pointY,c=cValue)
+            self.drawPic.xlabel('Ram')
+            self.drawPic.ylabel('Disk')
             # self.drawPic.draw()
         else:
             pass
