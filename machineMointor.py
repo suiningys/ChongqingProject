@@ -86,10 +86,36 @@ class DynamicDrawMachines(MyMplCanvas):
 
 
     def update_figure(self):
-        self.yData = self.yData[1:]+[random.randint(20, 80)]
+        self.yData = self.yData[1:] + [random.randint(20, 80)]
         self.axes.plot(self.xData,self.yData,'b')
         self.axes.set_ylim([0, 100])
         self.axes.set_xlim([0, self.points])
+        self.axes.set_yticks(range(0, 101, 10))
+        self.axes.grid(True)
+        self.draw()
+
+    def cla(self):
+        self.axes.clear()
+        self.draw()
+
+    def plot(self, *args, **kwargs):
+        self.axes.plot(*args, **kwargs)
+        self.axes.set_ylim([0, 100])
+        self.axes.set_xlim([0, 100])
+        self.axes.set_yticks(range(0, 101, 10))
+        self.axes.grid(True)
+        self.draw()
+
+    def grid(self, default=True):
+        if default:
+            self.axes.grid()
+        else:
+            self.axes.grid(False)
+
+    def scatter(self, *args, **kwargs):
+        self.axes.scatter(*args, **kwargs)
+        self.axes.set_ylim([0, 100])
+        self.axes.set_xlim([0, 100])
         self.axes.set_yticks(range(0, 101, 10))
         self.axes.grid(True)
         self.draw()
@@ -102,7 +128,13 @@ class ApplicationWindow(QMainWindow):
         self.readData()#读取数据
         self.timeCount = 0#定时器计数
         self.createColorMap()#创建默认颜色
+        self.createWarningMap()
 
+        self.selectedColony = ''
+        self.selectedMachine = ''
+        self.selectedDevice = ''
+        self.plotPoints = 100
+        self.plotData = [None]*self.plotPoints
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.setWindowTitle("程序主窗口")
 
@@ -111,17 +143,23 @@ class ApplicationWindow(QMainWindow):
                                  QtCore.Qt.CTRL + QtCore.Qt.Key_Q)
         self.menuBar().addMenu(self.file_menu)
 
+        self.tool_menu = QMenu('&功能',self)
+        self.tool_menu.addAction('&运行折线图',self.plotInit)
+        self.tool_menu.addAction('&运行散点图',self.scatterInit)
+        self.tool_menu.addAction('&运行统计图',self.pieInit)
+        self.drawWay = 2#1 折线 2 散点 3统计
+        self.menuBar().addMenu(self.tool_menu)
+
         self.help_menu = QMenu('&帮助', self)
         self.menuBar().addSeparator()
         self.menuBar().addMenu(self.help_menu)
-
         self.help_menu.addAction('&关于', self.about)
 
         self.main_widget = QWidget(self)
 
         H1 = QHBoxLayout(self.main_widget)
-        self.ddm = DynamicDrawMachines(self.main_widget,width=5, height=4, dpi=100)
-        H1.addWidget(self.ddm)
+        self.drawPic = DynamicDrawMachines(self.main_widget,width=5, height=4, dpi=100)
+        H1.addWidget(self.drawPic)
 
         #插入选择框
         V1 = QVBoxLayout(self.main_widget)
@@ -134,6 +172,7 @@ class ApplicationWindow(QMainWindow):
         self.chooseMachine.currentIndexChanged.connect(self.changeMachine)
         self.chooseDeviceLable = QLabel(u'机器设备')
         self.chooseDevice = QComboBox()
+        self.chooseDevice.currentIndexChanged.connect(self.changeDevice)
         self.useLocalData = QCheckBox('使用本地数据',self)
         self.useLocalData.toggle()
         self.useLocalData.stateChanged.connect(self.useLocalDataChange)
@@ -171,6 +210,18 @@ class ApplicationWindow(QMainWindow):
 
     def closeEvent(self, ce):
         self.fileQuit()
+
+    def plotInit(self):
+        self.drawWay = 1
+        self.drawPic.cla()
+
+    def scatterInit(self):
+        self.drawWay = 2
+        self.drawPic.cla()
+
+    def pieInit(self):
+        self.drawWay = 3
+        self.drawPic.cla()
 
     def about(self):
         QMessageBox.about(self, "关于",
@@ -216,9 +267,9 @@ Copyright 2017
         import json
         fileName = self.currentPath+'/a.json'
         f = open(fileName)
-        machineMap = json.load(f,encoding='utf-8')
+        self.machineCondNow = json.load(f,encoding='utf-8')
         f.close()
-        return  machineMap
+        #return  machineMap
 
     def readData(self):
         dataPath = self.readDataPath
@@ -264,9 +315,17 @@ Copyright 2017
         colorMap['red'] = '#FF0000'
         colorMap['yellow'] = '#FFD700'
         colorMap['green'] = '#00CD00'
-        colorMap['white'] = '#000000'
-        colorMap['black'] = '#FFFFFF'
+        colorMap['white'] = '#FFFFFF'
+        colorMap['black'] = '#000000'
         self.colorMap = colorMap
+
+    def createWarningMap(self):
+        warningMap={}
+        warningMap['info'] = u'所有机器正常运行'
+        warningMap['error'] = u'机器运行异常'
+        warningMap['warning'] = u'机器即将超限'
+        warningMap['warning2'] = u'机器超负荷运行'
+        self.warningMap = warningMap
 
     def choiceColor(self):
         col = QColorDialog.getColor()
@@ -288,6 +347,9 @@ Copyright 2017
         devList = self.ipsData[self.selectedMachine][2]
         self.chooseDevice.insertItems(1,devList)
 
+    def changeDevice(self):
+        self.selectedDevice = self.chooseDevice.currentText()
+
     def useLocalDataChange(self,state):
         #checkState = state
         if state == 2:
@@ -297,21 +359,77 @@ Copyright 2017
 
 
     def printSysCond(self):
-        if (self.timeCount % 4 == 0):
-            color = QColor('#FFFF00')
-        elif (self.timeCount % 4 == 1):
-            color = QColor(255, 0, 0)
-        elif (self.timeCount % 4 == 2):
-            color = QColor(255, 0, 255)
+        allRightFlag = 1
+        for ip in self.machineCondNow.keys():
+            dangerPro = self.machineCondNow[ip]['p']
+            if (dangerPro>=0.9):
+                color = QColor(self.colorMap['red'])
+                allRightFlag = 0
+                text = self.warningMap['error']
+            elif (dangerPro>=0.8):
+                color = QColor(self.colorMap['yellow'])
+                allRightFlag = 0
+                text = self.warningMap['warning2']
+            elif (dangerPro>=0.7):
+                color = QColor(self.colorMap['black'])
+                allRightFlag = 0
+                text = self.warningMap['warning']
+            else:
+                color = QColor(self.colorMap['green'])
+                continue
+            self.outputsSysCon.setTextColor(color)
+            self.outputsSysCon.append(ip + ' ' + text)
+        if(allRightFlag==1):
+            text = self.warningMap['info']
+            color = QColor(self.colorMap['green'])
+            self.outputsSysCon.setTextColor(color)
+            self.outputsSysCon.append(text)
+
+    def updateFigure(self):
+        #self.drawPic.axes.clear()
+        if(self.drawWay==1):
+            if(self.selectedMachine in self.machineCondNow.keys() and self.selectedDevice in self.machineCondNow[self.selectedMachine].keys()):
+                dataTemp = self.machineCondNow[self.selectedMachine][self.selectedDevice]
+                self.drawPic.cla()
+                self.plotData = self.plotData[1:] + [dataTemp]
+                self.drawPic.plot(list(range(self.plotPoints)),self.plotData)
+        elif(self.drawWay==2):
+            self.drawPic.cla()
+            pointX = []
+            pointY = []
+            cValue = []
+            for ip in self.machineCondNow:
+                if 'ram' in self.machineCondNow[ip].keys():
+                    ramTemp = self.machineCondNow[ip]['ram']
+                else:
+                    ramTemp = 50
+                diskNum = 0
+                diskUsage = 0
+                for dev in self.machineCondNow[ip].keys():
+                    if(dev=='ram' or dev == 'Time' or dev == 'p'):
+                        continue
+                    else:
+                        diskUsage += self.machineCondNow[ip][dev]
+                        diskNum +=1
+                diskTemp = diskUsage/diskNum
+                pointX.append(ramTemp)
+                pointY.append(diskTemp)
+                if(self.machineCondNow[ip]['p']>=0.9):
+                    cValue.append('r')
+                elif(self.machineCondNow[ip]['p']>=0.8):
+                    cValue.append('y')
+                else:
+                    cValue.append('g')
+            self.drawPic.scatter(pointX,pointY,c=cValue)
+            # self.drawPic.draw()
         else:
-            color = QColor(0, 0, 0)
-        self.outputsSysCon.setTextColor(color)
-        self.outputsSysCon.append(u"系统正常，哈哈哈哈哈哈")
+            pass
 
     #timer fuction
     def timerEvent(self):
         self.readJson()
-        self.ddm.update_figure()
+        #self.drawPic.update_figure()
+        self.updateFigure()
         self.printSysCond()
         self.timeCount = self.timeCount + 1
 
