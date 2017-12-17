@@ -20,6 +20,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from matplotlib.font_manager import FontProperties
 import datetime
+import time
 
 class MyMplCanvas(FigureCanvas):
     """这是一个窗口部件，即QWidget（当然也是FigureCanvasAgg）"""
@@ -374,18 +375,36 @@ Copyright 2017
     def printSysCond(self):
         allRightFlag = 1
         logFile = open(self.currentPath+'/outputlog.log','a')
+        #countFile
         now = datetime.datetime.now()
         nowStr = now.strftime('%Y-%m-%d %H:%M:%S')
+        year = datetime.datetime.now().year
+        weekCount = int(time.strftime("%W"))
+        statFile = open(self.currentPath+'/Statistic.txt','r+')
+        lines = statFile.readlines()
+        if len(lines)>0:
+            lastLine = [int(ii) for ii in lines[-1].strip().split(' ')]
+            if(lastLine[0]==year and lastLine[1]==weekCount):
+                warningCount = lastLine[2]
+                errorCount = lastLine[3]
+            else:
+                warningCount =0
+                errorCount = 0
+        else:
+            warningCount = 0
+            errorCount = 0
         for ip in self.machineCondNow.keys():
             dangerPro = self.machineCondNow[ip]['p']
             if (dangerPro>=0.9):
                 color = QColor(self.colorMap['red'])
                 allRightFlag = 0
                 text = self.warningMap['error']
+                errorCount +=1
             elif (dangerPro>=0.8):
                 color = QColor(self.colorMap['yellow'])
                 allRightFlag = 0
                 text = self.warningMap['warning2']
+                warningCount +=1
             elif (dangerPro>=0.7):
                 color = QColor(self.colorMap['black'])
                 allRightFlag = 0
@@ -402,7 +421,18 @@ Copyright 2017
             color = QColor(self.colorMap['green'])
             self.outputsSysCon.setTextColor(color)
             self.outputsSysCon.append(text)
+
+        statFile.close()
+        statFile = open(self.currentPath+'/Statistic.txt','w+')
+        intList = [str(year), str(weekCount), str(warningCount), str(errorCount)]
+        lineTempIndex = ' '.join(intList)+'\n'
+        if (len(lines)>0 and lastLine[0] == year and lastLine[1] == weekCount):
+            lines[-1] = lineTempIndex
+        else:
+            lines.append(lineTempIndex)
+        statFile.writelines(lines)
         logFile.close()
+
 
     def updateFigure(self):
         #self.drawPic.axes.clear()
