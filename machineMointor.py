@@ -13,6 +13,7 @@ matplotlib.use("Qt5Agg")
 
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import * #QApplication, QMainWindow, QMenu, QVBoxLayout, QSizePolicy, QMessageBox, QWidget
+from PyQt5.QtGui import QColor
 
 from numpy import arange, sin, pi
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -99,6 +100,8 @@ class ApplicationWindow(QMainWindow):
         self.currentPath = sys.path[0]#程序运行的路径
         self.readConfig()#读取配置文件
         self.readData()#读取数据
+        self.timeCount = 0#定时器计数
+        self.createColorMap()#创建默认颜色
 
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.setWindowTitle("程序主窗口")
@@ -214,6 +217,7 @@ Copyright 2017
         fileName = ''
         f = open(fileName)
         machineMap = json.load(f,encoding='utf-8')
+        f.close()
         return  machineMap
 
     def readData(self):
@@ -255,6 +259,20 @@ Copyright 2017
                 ipsData[ips] = ipsInfo
         self.ipsData = ipsData
 
+    def createColorMap(self):
+        colorMap={}
+        colorMap['red'] = '#FF0000'
+        colorMap['yellow'] = '#FFD700'
+        colorMap['green'] = '#00CD00'
+        colorMap['white'] = '#000000'
+        colorMap['black'] = '#FFFFFF'
+        self.colorMap = colorMap
+
+    def choiceColor(self):
+        col = QColorDialog.getColor()
+        if col.isValid():
+            return
+
     def changeColony(self):
         self.selectedColony = self.chooseColony.currentText()
         self.chooseDevice.clear()
@@ -271,18 +289,30 @@ Copyright 2017
         self.chooseDevice.insertItems(1,devList)
 
     def useLocalDataChange(self,state):
-        checkState = state
+        #checkState = state
         if state == 2:
             self.readDataPath  = self.localDataPath
         else:
             self.readDataPath = self.configDataPath
 
 
+    def printSysCond(self):
+        if (self.timeCount % 4 == 0):
+            color = QColor('#FFFF00')
+        elif (self.timeCount % 4 == 1):
+            color = QColor(255, 0, 0)
+        elif (self.timeCount % 4 == 2):
+            color = QColor(255, 0, 255)
+        else:
+            color = QColor(0, 0, 0)
+        self.outputsSysCon.setTextColor(color)
+        self.outputsSysCon.append(u"系统正常，哈哈哈哈哈哈")
 
     #timer fuction
     def timerEvent(self):
         self.ddm.update_figure()
-        self.outputsSysCon.append(u"系统正常，哈哈哈哈哈哈")
+        self.printSysCond()
+        self.timeCount = self.timeCount + 1
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
