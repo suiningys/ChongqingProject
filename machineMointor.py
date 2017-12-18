@@ -105,6 +105,7 @@ class DynamicDrawMachines(MyMplCanvas):
         self.axes.set_ylim([0, 100])
         self.axes.set_xlim([0, 100])
         self.axes.set_yticks(range(0, 101, 10))
+        self.axes.set_ylabel('Usage')
         self.axes.grid(True)
         self.draw()
 
@@ -119,6 +120,8 @@ class DynamicDrawMachines(MyMplCanvas):
         self.axes.set_ylim([0, 100])
         self.axes.set_xlim([0, 100])
         self.axes.set_yticks(range(0, 101, 10))
+        self.axes.set_xlabel(u'内存')
+        self.axes.set_ylabel(u'磁盘')
         self.axes.grid(True)
         self.draw()
 
@@ -472,8 +475,8 @@ Copyright 2017
                 else:
                     cValue.append('g')
             self.drawPic.scatter(pointX,pointY,c=cValue)
-            self.drawPic.xlabel('Ram')
-            self.drawPic.ylabel('Disk')
+            #self.drawPic.xlabel('Ram')
+            #self.drawPic.ylabel('Disk')
             # self.drawPic.draw()
         else:
             self.drawPic.cla()
