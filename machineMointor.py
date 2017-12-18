@@ -81,7 +81,7 @@ class DynamicDrawMachines(MyMplCanvas):
     def compute_initial_figure(self):
         self.xData = list(range(self.points ))
         self.yData = [0]*self.points
-        self.axes.plot(self.xData,self.yData,'b')
+        # self.axes.plot(self.xData,self.yData,'b')
         self.axes.set_ylim([0,100])
         self.axes.set_xlim([0, self.points])
         self.axes.set_yticks(range(0,101,10))
@@ -509,7 +509,7 @@ Copyright 2017
                 self.drawPic.axes.text(x-0.15,y+0.05,y,ha='center',va='bottom')
             for x, y in zip(xdata, errorData):
                 self.drawPic.axes.text(x + 0.2, y + 0.05, y, ha='center', va='bottom')
-            maxNum = max([max(warningData),max(errorData)])+2
+            maxNum = max([max(warningData),max(errorData)])*1.05
             self.drawPic.axes.set_ylim([0, maxNum])
             self.drawPic.draw()
 
