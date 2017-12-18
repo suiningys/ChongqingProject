@@ -27,7 +27,7 @@ class MyMplCanvas(FigureCanvas):
     """这是一个窗口部件，即QWidget（当然也是FigureCanvasAgg）"""
     def __init__(self, parent=None, width=5, height=4, dpi=100):
         fig = Figure(figsize=(width, height), dpi=dpi)
-        plt.rcParams['font.sans-serif'] = ['SimHei']
+
         self.axes = fig.add_subplot(111)
         # 每次plot()调用的时候，我们希望原来的坐标轴被清除(所以False)
         self.axes.hold(True)
@@ -144,6 +144,16 @@ class ApplicationWindow(QMainWindow):
         self.createColorMap()#创建默认颜色
         self.createWarningMap()
 
+        # 判断操作系统
+        import platform
+        operationSys = platform.platform()
+        if operationSys[:5] == 'Windo':
+            plt.rcParams['font.sans-serif'] = ['SimHei']  # 如果是window系统可以直接设置matplotlib字体为黑体
+        # 如果是linux系统，需要手动设置设置字体
+        else:
+            if plt.rcParams['font.sans-serif'][0] != u'Microsoft YaHei':
+                self.noFontWarning()
+
         #默认选择的集群等为空
         self.selectedColony = ''
         self.selectedMachine = ''
@@ -249,6 +259,13 @@ class ApplicationWindow(QMainWindow):
 Copyright 2017 
         """
         )
+    def noFontWarning(self):
+        QMessageBox.about(self,"matplotlib字体缺失",
+        """
+没有合适的matplotlib字体，图像显示可能出现问题
+自带的matplotlib字体在 fonts文件夹下
+设置过程参考https://www.zhihu.com/question/25404709
+        """)
 
     def readConfig(self):
         configFileName = self.currentPath+'/config.txt'
