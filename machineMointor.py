@@ -304,6 +304,25 @@ Copyright 2017
         f.close()
         #return  machineMap
 
+    def readJson2(self):
+        import json
+        fileName = self.currentPath+'/result.json'
+        machineCondNow = {}
+        f = open(fileName)
+        lines = f.readlines()
+        for line in lines:
+            mapTemp = {}
+            temp = line.split('\t')
+            jsontemp = json.loads(temp[1])
+            info = jsontemp['info']
+            mapTemp['p'] = jsontemp['prob']
+            for key in info.keys():
+                devInfoTemp = info[key]
+                mapTemp.update(devInfoTemp)
+            machineCondNow[temp[0]] = mapTemp
+        f.close()
+        self.machineCondNow = machineCondNow#读取的机器状况
+
     def readData(self):
         dataPath = self.readDataPath
         ipsData = {}
@@ -463,7 +482,7 @@ Copyright 2017
         #self.drawPic.axes.clear()
         if(self.drawWay==1):
             if(self.selectedMachine in self.machineCondNow.keys() and self.selectedDevice in self.machineCondNow[self.selectedMachine].keys()):
-                dataTemp = self.machineCondNow[self.selectedMachine][self.selectedDevice]
+                dataTemp = int(self.machineCondNow[self.selectedMachine][self.selectedDevice])
                 self.drawPic.cla()
                 self.plotData = self.plotData[1:] + [dataTemp]
                 self.drawPic.plot(list(range(self.plotPoints)),self.plotData)
@@ -475,7 +494,7 @@ Copyright 2017
             cValue = []
             for ip in self.machineCondNow:
                 if 'ram' in self.machineCondNow[ip].keys():
-                    ramTemp = self.machineCondNow[ip]['ram']
+                    ramTemp = int(self.machineCondNow[ip]['ram'])
                 else:
                     ramTemp = 50
                 diskNum = 0
@@ -484,7 +503,7 @@ Copyright 2017
                     if(dev=='ram' or dev == 'Time' or dev == 'p'):
                         continue
                     else:
-                        diskUsage += self.machineCondNow[ip][dev]
+                        diskUsage += int(self.machineCondNow[ip][dev])
                         diskNum +=1
                 diskTemp = diskUsage/diskNum
                 pointX.append(ramTemp)
@@ -533,7 +552,8 @@ Copyright 2017
 
     #timer fuction
     def timerEvent(self):
-        self.readJson()
+        #self.readJson()
+        self.readJson2()
         #self.drawPic.update_figure()
         self.updateFigure()
         self.printSysCond()
