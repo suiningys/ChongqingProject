@@ -367,8 +367,9 @@ Copyright 2017
 
     def changeDevice(self):
         self.selectedDevice = self.chooseDevice.currentText()
-        self.drawPic.cla()
-        self.plotData = [None]*self.plotPoints
+        if self.drawWay==1:
+            self.drawPic.cla()
+            self.plotData = [None]*self.plotPoints
 
     def useLocalDataChange(self,state):
         #checkState = state
