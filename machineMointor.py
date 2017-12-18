@@ -18,6 +18,7 @@ from PyQt5.QtGui import QColor
 from numpy import arange, sin, pi
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
 import datetime
 import time
@@ -26,7 +27,7 @@ class MyMplCanvas(FigureCanvas):
     """这是一个窗口部件，即QWidget（当然也是FigureCanvasAgg）"""
     def __init__(self, parent=None, width=5, height=4, dpi=100):
         fig = Figure(figsize=(width, height), dpi=dpi)
-
+        plt.rcParams['font.sans-serif'] = ['SimHei']
         self.axes = fig.add_subplot(111)
         # 每次plot()调用的时候，我们希望原来的坐标轴被清除(所以False)
         self.axes.hold(True)
@@ -105,7 +106,7 @@ class DynamicDrawMachines(MyMplCanvas):
         self.axes.set_ylim([0, 100])
         self.axes.set_xlim([0, 100])
         self.axes.set_yticks(range(0, 101, 10))
-        self.axes.set_ylabel('Usage')
+        self.axes.set_ylabel(u'使用率')
         self.axes.grid(True)
         self.draw()
 
@@ -366,6 +367,8 @@ Copyright 2017
 
     def changeDevice(self):
         self.selectedDevice = self.chooseDevice.currentText()
+        self.drawPic.cla()
+        self.plotData = [None]*self.plotPoints
 
     def useLocalDataChange(self,state):
         #checkState = state
@@ -480,27 +483,32 @@ Copyright 2017
             # self.drawPic.draw()
         else:
             self.drawPic.cla()
-            xdata = arange(5) + 1
+
             warningData = []
             errorData = []
             statFile = open('Statistic.txt','r')
             lines = statFile.readlines()
+            groupLabels = []
             for ii in range(5):
                 index = -5+ii
                 try:
                     lineTemp =[int(ii) for ii in lines[index].strip().split(' ')]
                     warningData.append(lineTemp[2])
                     errorData.append(lineTemp[3])
+                    groupLabels.append(lineTemp[1])
                 except:
                     warningData = 0
                     errorData = 0
             statFile.close()
-            self.drawPic.axes.bar(xdata, warningData, width=0.35, facecolor = 'yellowgreen',edgecolor = 'white')
-            self.drawPic.axes.bar(xdata+0.35, errorData, width=0.35, facecolor='red', edgecolor='white')
+            xdata = arange(groupLabels[-5],groupLabels[-1]+1)
+            self.drawPic.axes.bar(xdata-0.15, warningData, width=0.35, facecolor = 'yellowgreen',edgecolor = 'white')
+            self.drawPic.axes.bar(xdata+0.2, errorData, width=0.35, facecolor='red', edgecolor='white')
+            self.drawPic.axes.legend([u'警告',u'异常'],loc='upper left',fontsize=10)
+            #self.drawPic.axes.xticks(xdata,groupLabels,rotation=0)
             for x,y in zip(xdata,warningData):
-                self.drawPic.axes.text(x,y+0.05,y,ha='center',va='bottom')
+                self.drawPic.axes.text(x-0.15,y+0.05,y,ha='center',va='bottom')
             for x, y in zip(xdata, errorData):
-                self.drawPic.axes.text(x + 0.3, y + 0.05, y, ha='center', va='bottom')
+                self.drawPic.axes.text(x + 0.2, y + 0.05, y, ha='center', va='bottom')
             maxNum = max([max(warningData),max(errorData)])+2
             self.drawPic.axes.set_ylim([0, maxNum])
             self.drawPic.draw()
